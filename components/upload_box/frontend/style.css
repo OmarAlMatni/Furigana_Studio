@@ -1,0 +1,87 @@
+:root {
+  --primary-purple: #8a2be2;
+  --primary-pink: #ff69b4;
+  --glow-color: rgba(238, 130, 238, 0.4);
+  --glass-bg: rgba(20, 15, 38, 0.65);
+}
+
+body {
+  margin: 0;
+  padding: 10px;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.drop-zone {
+  border: 2px dashed rgba(216, 112, 147, 0.6);
+  border-radius: 16px;
+  padding: 32px 20px;
+  text-align: center;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  user-select: none;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--primary-pink);
+  box-shadow: 0 0 20px var(--glow-color), 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+  background: rgba(30, 20, 50, 0.75);
+}
+
+.drop-icon {
+  font-size: 42px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 8px var(--primary-pink));
+}
+
+.drop-title {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.drop-subtitle {
+  color: #c8c3e6;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+}
+
+.browse-link {
+  color: var(--primary-pink);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.drop-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(138, 43, 226, 0.3);
+  border: 1px solid rgba(255, 105, 180, 0.3);
+  border-radius: 12px;
+  color: #e0d0f5;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.file-info {
+  margin-top: 14px;
+  padding: 8px 14px;
+  background: rgba(255, 105, 180, 0.15);
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.85rem;
+  word-break: break-all;
+  border: 1px solid rgba(255, 105, 180, 0.4);
+}
+
+.hidden {
+  display: none;
+}
