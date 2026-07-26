@@ -106,8 +106,8 @@ st.markdown(
         }}
 
         .block-container {{
-            max-width: 680px;
-            padding-top: 2.5rem;
+            max-width: 800px;
+            padding-top: 7rem;
             padding-bottom: 3rem;
         }}
 
@@ -177,7 +177,7 @@ st.markdown(
             background: var(--fs-glass-bg) !important;
             border: 2px dashed rgba(216, 112, 147, 0.6) !important;
             border-radius: 18px !important;
-            padding: 2.5rem 1.5rem !important;
+            padding: 7.5rem 1.5rem !important;
             backdrop-filter: blur(12px) !important;
             transition: all 0.3s ease !important;
             display: flex !important;
@@ -273,51 +273,61 @@ st.markdown(
 
         /* 2. Display custom "click to upload" subtext */
         [data-testid="stFileUploaderDropzoneInstructions"]::after {{
-            content: "click to upload" !important;
+            content: "Click to upload" !important;
             visibility: visible !important;
             display: block !important;
             color: #cfc9e6 !important;
-            font-size: 0.92rem !important;
+            font-size: 1.6rem !important;
             font-weight: 500 !important;
             text-align: center !important;
             margin-top: 4px !important;
             text-transform: lowercase !important;
         }}
 
-        /* --- Custom filename row + delete (✕) button, shown after a
-           file is selected. Sits snug directly under the dashed box
-           (small margin-top, no independent card styling on the
-           filename chip) so it reads as attached to the upload box
-           rather than a separate section further down the page. --- */
-        .fs-filename-row {{
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 0.35rem;
-        }}
-        .fs-filename {{
-            flex: 1;
-            font-size: 0.92rem;
-            color: #e8e0fa;
-            padding: 0.3rem 0.2rem;
-            overflow-wrap: anywhere;
-        }}
+        [data-testid="stFileUploaderDropzoneInstructions"] {{
+           display: flex !important;
+           justify-content: center !important;
+           width: 100% !important;
+         }}
 
-        /* The ✕ clear button is a plain (non-primary) Streamlit button —
-           this is currently the only "secondary" button in the app, so
-           scoping by kind="secondary" is safe and specific here. */
+        /* Delete button row: pulled UP into the box above via negative
+           top margin, rather than position:absolute. Three prior
+           attempts using position:absolute all landed wrong, because
+           that technique depends on correctly identifying Streamlit's
+           internal "nearest positioned ancestor" — unverifiable without
+           an actual browser render, and guessed wrong each time.
+           Negative margin has no such dependency: it's plain box-model
+           math (pull this element up by N pixels, full stop), so the
+           only real uncertainty is whether N is exactly right — a
+           small, safe tuning value rather than "positioned against the
+           wrong element entirely." margin-bottom restores normal
+           spacing before the Generate button afterward, since pulling
+           this row up would otherwise also drag that button closer.
+           The exact -64px pull is estimated from the box's own
+           padding (2.5rem \u2248 40px) plus this row's approximate
+           natural height — likely close, may need a small nudge once
+           actually rendered. */
+        div[data-testid="stHorizontalBlock"] {{
+            margin-top: -175px !important;
+            margin-bottom: 1.1rem !important;
+            padding: 0 1.3rem !important;
+            position: relative;
+            z-index: 3;
+        }}
         button[kind="secondary"] {{
-            background: rgba(255, 255, 255, 0.06) !important;
-            border: 1px solid rgba(216, 112, 147, 0.45) !important;
-            color: #f4f1fb !important;
-            border-radius: 10px !important;
+            background: rgba(138, 43, 226, 0.35) !important;
+            border: 1px solid rgba(255, 105, 180, 0.55) !important;
+            color: #ffffff !important;
+            border-radius: 50% !important;
+            font-weight: 600 !important;
             min-height: unset !important;
-            height: 2.6rem !important;
-            padding: 0 0.9rem !important;
-            font-weight: 700 !important;
+            width: 2.3rem !important;
+            height: 2.3rem !important;
+            padding: 0 !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
         }}
         button[kind="secondary"]:hover {{
-            background: rgba(255, 105, 180, 0.25) !important;
+            background: rgba(255, 105, 180, 0.5) !important;
             border-color: var(--fs-pink) !important;
         }}
 
@@ -365,15 +375,7 @@ def load_layout_engine() -> LayoutEngine:
 
 
 # --- Top Header ---
-st.markdown(
-    """
-    <div class="fs-header">
-        <div class="fs-logo">あ</div>
-        <div class="fs-header-title">Furigana Studio</div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+
 
 # --- Hero Section ---
 st.markdown(
@@ -428,6 +430,25 @@ uploaded_file = st.file_uploader(
     key=f"file_uploader_{st.session_state.uploader_key}",
 )
 
+# Delete row: deliberately NOT absolutely positioned. Three rounds of
+# trying to place this button precisely inside the box via
+# position:absolute all landed wrong, because that technique depends on
+# knowing Streamlit's exact internal wrapper/positioning-context chain —
+# which isn't verifiable without an actual browser render. st.columns is
+# normal document flow with no such dependency, and has already rendered
+# correctly earlier in this app. It won't sit literally inside the
+# dashed border, but the CSS below removes the gap and matches the box's
+# background/border so it reads as one continuous attached piece rather
+# than a separate section.
+if uploaded_file is not None:
+    _, clear_col = st.columns([0.50, 0.32])
+    with clear_col:
+        if st.button("✕", key="clear_uploaded_file", help="Remove this file"):
+            st.session_state.uploader_key += 1
+            st.session_state.uploaded_filename = None
+            st.session_state.ready_file = None
+            st.rerun()
+
 # Reset output state if a new file is uploaded or removed
 if (
     "uploaded_filename" not in st.session_state
@@ -436,23 +457,6 @@ if (
 ):
     st.session_state.uploaded_filename = uploaded_file.name if uploaded_file else None
     st.session_state.ready_file = None
-
-# Custom filename display + delete (✕) button, shown once a file is
-# selected. Streamlit's own native per-file row is hidden via CSS above,
-# so this is the only filename/remove affordance the user sees.
-if uploaded_file is not None:
-    name_col, clear_col = st.columns([0.86, 0.14], vertical_alignment="center")
-    with name_col:
-        st.markdown(
-            f"<div class='fs-filename-row'><div class='fs-filename'>📄 {uploaded_file.name}</div></div>",
-            unsafe_allow_html=True,
-        )
-    with clear_col:
-        if st.button("✕", key="clear_uploaded_file", help="Remove this file"):
-            st.session_state.uploader_key += 1
-            st.session_state.uploaded_filename = None
-            st.session_state.ready_file = None
-            st.rerun()
 
 # If ready_file is set, show ONLY the Download button
 if st.session_state.ready_file is not None:
@@ -500,6 +504,6 @@ else:
                     st.rerun()
 
 st.markdown(
-    "<div class='fs-footer'>🌸 Made with ❤️ for the anime community</div>",
+    "<div class='fs-footer'>🌸 Made with ❤️ for the anime community 🌸</div>",
     unsafe_allow_html=True,
 )
